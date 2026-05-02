@@ -43,7 +43,7 @@ git clone <https://github.com/MarlonMaca2022/AntvengersFront>
 cd antvengers-react
 ```
 
-### 2. Instalar dependencias
+## 2. Instalar dependencias
 
 ```bash
 npm install
