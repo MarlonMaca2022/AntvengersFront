@@ -1,0 +1,184 @@
+import React, { useState, useEffect } from 'react';
+import Sidebar from '../components/Sidebar';
+import AdminHeader from '../components/AdminHeader';
+import UserModal from '../components/UserModal';
+
+const AdminUserPage = () => {
+    const [users, setUsers] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [userToEdit, setUserToEdit] = useState(null);
+
+    useEffect(() => {
+        const storedUsers = JSON.parse(localStorage.getItem('ant_users') || '[]');
+        setUsers(storedUsers);
+    }, []);
+
+    const saveToLocalStorage = (newUsers) => {
+        localStorage.setItem('ant_users', JSON.stringify(newUsers));
+        setUsers(newUsers);
+    };
+
+    const handleSaveUser = (userData) => {
+        let updatedUsers;
+        if (userToEdit) {
+            updatedUsers = users.map(u => u.id === userData.id ? userData : u);
+        } else {
+            updatedUsers = [...users, userData];
+        }
+        saveToLocalStorage(updatedUsers);
+        setUserToEdit(null);
+    };
+
+    const handleDeleteUser = (id) => {
+        if (window.confirm('¿Estás seguro de eliminar este usuario?')) {
+            const updatedUsers = users.filter(u => u.id !== id);
+            saveToLocalStorage(updatedUsers);
+        }
+    };
+
+    const handleEditUser = (user) => {
+        setUserToEdit(user);
+        setIsModalOpen(true);
+    };
+
+    const filteredUsers = users.filter(user => 
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const totalAdmins = users.filter(u => u.role === 'Admin').length;
+
+    return (
+        <div className="dashboard-layout">
+            <Sidebar />
+
+            <main className="main-content">
+                <AdminHeader searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+
+                <div className="content-body" style={{ paddingTop: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+                        <div>
+                            <h2 style={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.025em' }}>Gestión de Usuarios</h2>
+                            <p style={{ color: 'var(--slate-500)', fontSize: '0.875rem', marginTop: '0.25rem' }}>Gestiona los accesos y roles de la plataforma.</p>
+                        </div>
+                        <button 
+                            className="submit-btn" 
+                            style={{ padding: '0.6rem 1.2rem', fontSize: '0.875rem', width: 'auto' }} 
+                            onClick={() => { setUserToEdit(null); setIsModalOpen(true); }}
+                        >
+                            <i className="bi bi-person-plus" style={{ fontSize: '1.1rem', marginRight: '0.25rem' }}></i>
+                            <span>Nuevo Usuario</span>
+                        </button>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="stats-grid">
+                        <div className="stat-card">
+                            <div className="stat-header">
+                                <div className="logo-icon" style={{ background: 'rgba(var(--primary-rgb), 0.1)' }}>
+                                    <i className="bi bi-people" style={{ color: 'var(--primary)' }}></i>
+                                </div>
+                                <span className="status-chip status-active">+12%</span>
+                            </div>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--slate-500)', fontWeight: 600 }}>Total Usuarios</p>
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{users.length}</h3>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-header">
+                                <div className="logo-icon" style={{ background: 'rgba(34, 197, 94, 0.1)' }}>
+                                    <i className="bi bi-person-check" style={{ color: '#4ade80' }}></i>
+                                </div>
+                                <span className="status-chip status-active">Online</span>
+                            </div>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--slate-500)', fontWeight: 600 }}>Activos hoy</p>
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>843</h3>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-header">
+                                <div className="logo-icon" style={{ background: 'rgba(245, 158, 11, 0.1)' }}>
+                                    <i className="bi bi-shield-lock" style={{ color: '#f59e0b' }}></i>
+                                </div>
+                                <span className="status-chip status-inactive">Admin</span>
+                            </div>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--slate-500)', fontWeight: 600 }}>Administradores</p>
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{totalAdmins}</h3>
+                        </div>
+                    </div>
+
+                    {/* Table */}
+                    <div className="table-container">
+                        <table className="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Rol</th>
+                                    <th>Estado</th>
+                                    <th style={{ textAlign: 'right' }}>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredUsers.map(user => (
+                                    <tr key={user.id} className="fade-in">
+                                        <td>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                <img 
+                                                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`} 
+                                                    className="user-avatar" 
+                                                    alt={user.name} 
+                                                    style={{ width: '32px', height: '32px' }}
+                                                />
+                                                <span style={{ fontWeight: 600 }}>{user.name}</span>
+                                            </div>
+                                        </td>
+                                        <td style={{ color: 'var(--slate-500)' }}>{user.email}</td>
+                                        <td>
+                                            <span className={`status-chip ${user.role === 'Admin' ? 'status-active' : 'status-inactive'}`}>
+                                                {user.role}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className={`status-chip ${user.status === 'Active' ? 'status-active' : 'status-inactive'}`}>
+                                                <i className="bi bi-circle-fill" style={{ fontSize: '0.4rem', marginRight: '0.4rem' }}></i>
+                                                {user.status}
+                                            </span>
+                                        </td>
+                                        <td style={{ textAlign: 'right' }}>
+                                            <button className="action-btn" onClick={() => handleEditUser(user)} title="Editar">
+                                                <i className="bi bi-pencil-square"></i>
+                                            </button>
+                                            <button className="action-btn delete" onClick={() => handleDeleteUser(user.id)} title="Eliminar">
+                                                <i className="bi bi-trash3"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        
+                        <div style={{ padding: '1rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-current)', backgroundColor: 'rgba(var(--slate-100), 0.3)' }}>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--slate-500)' }}>
+                                Mostrando {filteredUsers.length} resultados
+                            </p>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <button className="menu-btn" style={{ width: '2rem', height: '2rem' }}><i className="bi bi-chevron-left" style={{ fontSize: '0.8rem' }}></i></button>
+                                <button className="menu-btn active" style={{ width: '2rem', height: '2rem', background: 'var(--primary)', color: 'white' }}>1</button>
+                                <button className="menu-btn" style={{ width: '2rem', height: '2rem' }}><i className="bi bi-chevron-right" style={{ fontSize: '0.8rem' }}></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <UserModal 
+                isOpen={isModalOpen} 
+                onClose={() => { setIsModalOpen(false); setUserToEdit(null); }}
+                onSave={handleSaveUser}
+                userToEdit={userToEdit}
+            />
+        </div>
+    );
+};
+
+export default AdminUserPage;
