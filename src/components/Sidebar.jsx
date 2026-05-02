@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 const Sidebar = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    
+
     // Get user session info
     const session = JSON.parse(localStorage.getItem('ant_session') || '{}');
     const userName = session.name || 'Admin Antvenger';
@@ -16,20 +16,26 @@ const Sidebar = () => {
     };
 
     const navItems = [
-        { title: 'Principal', items: [
-            { path: '/dashboard', icon: 'bi-speedometer2', label: 'Dashboard' },
-            { path: '/admin_gastos', icon: 'bi-receipt', label: 'Gastos' },
-            { path: '#', icon: 'bi-graph-up-arrow', label: 'Reportes' },
-        ]},
-        { title: 'Administración', items: [
-            { path: '/admin_user', icon: 'bi-people', label: 'Usuarios' },
-            { path: '/admin_categorias', icon: 'bi-tags', label: 'Categorías' },
-            { path: '/admin_metodos_pago', icon: 'bi-credit-card', label: 'Métodos de Pago' },
-            { path: '/admin_comercios', icon: 'bi-shop', label: 'Comercios' },
-        ]},
-        { title: 'Sistema', items: [
-            { path: '/configuracion', icon: 'bi-gear', label: 'Configuración' },
-        ]}
+        {
+            title: 'Principal', items: [
+                { path: '/dashboard', icon: 'bi-speedometer2', label: 'Dashboard' },
+                { path: '/admin_gastos', icon: 'bi-receipt', label: 'Gastos' }
+                /*{ path: '#', icon: 'bi-graph-up-arrow', label: 'Reportes' },*/
+            ]
+        },
+        {
+            title: 'Administración', items: [
+                { path: '/admin_user', icon: 'bi-people', label: 'Usuarios' },
+                { path: '/admin_categorias', icon: 'bi-tags', label: 'Categorías' },
+                { path: '/admin_metodos_pago', icon: 'bi-credit-card', label: 'Métodos de Pago' },
+                { path: '/admin_comercios', icon: 'bi-shop', label: 'Comercios' },
+            ]
+        },
+        {
+            title: 'Sistema', items: [
+                { path: '/configuracion', icon: 'bi-gear', label: 'Configuración' },
+            ]
+        }
     ];
 
     return (
@@ -51,8 +57,8 @@ const Sidebar = () => {
                     <div className="nav-section" key={idx}>
                         <p className="nav-title">{section.title}</p>
                         {section.items.map((item, itemIdx) => (
-                            <Link 
-                                to={item.path} 
+                            <Link
+                                to={item.path}
                                 className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
                                 key={itemIdx}
                             >
@@ -66,10 +72,10 @@ const Sidebar = () => {
 
             <div style={{ padding: '1.5rem', borderTop: '1px solid var(--border-current)' }}>
                 <div className="user-badge" style={{ background: 'none', padding: 0 }}>
-                    <img 
-                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=2aa3cf&color=fff`} 
-                        className="user-avatar" 
-                        alt={userName} 
+                    <img
+                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=2aa3cf&color=fff`}
+                        className="user-avatar"
+                        alt={userName}
                     />
                     <div style={{ flex: 1 }}>
                         <p style={{ fontSize: '0.8rem', fontWeight: 700 }}>{userName}</p>
