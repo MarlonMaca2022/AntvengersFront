@@ -13,16 +13,23 @@ const AdminMetodoPagoPage = () => {
     useEffect(() => {
         if (!localStorage.getItem('ant_methods')) {
             const initialMethods = [
-                { id: Date.now(), platform: 'Tarjeta de Crédito', type: 'Crédito', status: 'Activo' },
-                { id: Date.now() + 1, platform: 'Tarjeta de Débito', type: 'Débito', status: 'Activo' },
-                { id: Date.now() + 2, platform: 'Efectivo', type: 'Efectivo', status: 'Activo' },
-                { id: Date.now() + 3, platform: 'Sistecredito', type: 'Crédito', status: 'Activo' },
-                { id: Date.now() + 4, platform: 'Addi', type: 'Crédito', status: 'Inactivo' }
+                { id: Date.now(), nombre: 'Tarjeta de Crédito', tipo: 'Tarjeta de crédito', estado: 'Activo', descripcion: 'Pagos con franquicias Visa, Mastercard, etc.' },
+                { id: Date.now() + 1, nombre: 'Tarjeta de Débito', tipo: 'Tarjeta de débito', estado: 'Activo', descripcion: 'Pagos directos de cuenta de ahorros/corriente.' },
+                { id: Date.now() + 2, nombre: 'Efectivo', tipo: 'Efectivo', estado: 'Activo', descripcion: 'Pagos contra entrega en dinero físico.' },
+                { id: Date.now() + 3, nombre: 'Sistecredito', tipo: 'Crédito', estado: 'Activo', descripcion: 'Financiación directa con Sistecredito.' },
+                { id: Date.now() + 4, nombre: 'Addi', tipo: 'Crédito', estado: 'Inactivo', descripcion: 'Pagos a cuotas sin intereses con Addi.' }
             ];
             localStorage.setItem('ant_methods', JSON.stringify(initialMethods));
         }
         
-        const storedMethods = JSON.parse(localStorage.getItem('ant_methods') || '[]');
+        let storedMethods = JSON.parse(localStorage.getItem('ant_methods') || '[]');
+        storedMethods = storedMethods.map(m => ({
+            ...m,
+            nombre: m.nombre || m.platform,
+            tipo: m.tipo || m.type,
+            estado: m.estado || m.status,
+            descripcion: m.descripcion || ''
+        }));
         setMethods(storedMethods);
     }, []);
 
@@ -56,13 +63,14 @@ const AdminMetodoPagoPage = () => {
     };
 
     const filteredMethods = methods.filter(method => 
-        method.platform.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        method.type.toLowerCase().includes(searchTerm.toLowerCase())
+        (method.nombre || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (method.tipo || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const getBadgeClass = (type) => {
-        if (type === 'Crédito') return 'badge-credito';
-        if (type === 'Débito') return 'badge-debito';
+    const getBadgeClass = (tipo) => {
+        if (!tipo) return 'badge-efectivo';
+        if (tipo.toLowerCase().includes('crédito')) return 'badge-credito';
+        if (tipo.toLowerCase().includes('débito')) return 'badge-debito';
         return 'badge-efectivo';
     };
 
@@ -127,9 +135,10 @@ const AdminMetodoPagoPage = () => {
                         <table className="custom-table" style={{ width: '100%' }}>
                             <thead>
                                 <tr>
-                                    <th style={{ backgroundColor: 'rgba(var(--slate-800), 0.5)' }}>Plataforma / Medio</th>
+                                    <th style={{ backgroundColor: 'rgba(var(--slate-800), 0.5)' }}>Nombre</th>
                                     <th style={{ backgroundColor: 'rgba(var(--slate-800), 0.5)' }}>Tipo</th>
                                     <th style={{ backgroundColor: 'rgba(var(--slate-800), 0.5)' }}>Estado</th>
+                                    <th style={{ backgroundColor: 'rgba(var(--slate-800), 0.5)' }}>Descripción</th>
                                     <th style={{ textAlign: 'right', backgroundColor: 'rgba(var(--slate-800), 0.5)' }}>Acciones</th>
                                 </tr>
                             </thead>
@@ -141,19 +150,22 @@ const AdminMetodoPagoPage = () => {
                                                 <div className="method-icon">
                                                     <i className="bi bi-bank"></i>
                                                 </div>
-                                                <span style={{ fontWeight: 500 }}>{method.platform}</span>
+                                                <span style={{ fontWeight: 500 }}>{method.nombre}</span>
                                             </div>
                                         </td>
                                         <td>
-                                            <span className={`badge ${getBadgeClass(method.type)}`}>
-                                                {method.type}
+                                            <span className={`badge ${getBadgeClass(method.tipo)}`}>
+                                                {method.tipo}
                                             </span>
                                         </td>
                                         <td>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: method.status === 'Activo' ? '#10b981' : '#94a3b8', fontSize: '0.75rem', fontWeight: 500 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: method.estado === 'Activo' ? '#10b981' : '#94a3b8', fontSize: '0.75rem', fontWeight: 500 }}>
                                                 <i className="bi bi-circle-fill" style={{ fontSize: '0.4rem' }}></i>
-                                                {method.status}
+                                                {method.estado}
                                             </div>
+                                        </td>
+                                        <td>
+                                            <div className="table-desc" style={{ maxWidth: '250px' }}>{method.descripcion || 'Sin descripción'}</div>
                                         </td>
                                         <td style={{ textAlign: 'right' }}>
                                             <button className="action-btn" onClick={() => handleEditMethod(method)} title="Editar">

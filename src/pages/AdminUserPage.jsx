@@ -43,11 +43,14 @@ const AdminUserPage = () => {
     };
 
     const filteredUsers = users.filter(user => 
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+        (user.nombres || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (user.correo || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (user.username || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const totalAdmins = users.filter(u => u.role === 'Admin').length;
+    const totalHombres = users.filter(u => u.genero === 'Masculino').length;
+    const totalMujeres = users.filter(u => u.genero === 'Femenino').length;
+    const totalAdmins = users.filter(u => u.rol === 'Admin').length;
 
     return (
         <div className="dashboard-layout">
@@ -86,16 +89,6 @@ const AdminUserPage = () => {
                         </div>
                         <div className="stat-card">
                             <div className="stat-header">
-                                <div className="logo-icon" style={{ background: 'rgba(34, 197, 94, 0.1)' }}>
-                                    <i className="bi bi-person-check" style={{ color: '#4ade80' }}></i>
-                                </div>
-                                <span className="status-chip status-active">Online</span>
-                            </div>
-                            <p style={{ fontSize: '0.8rem', color: 'var(--slate-500)', fontWeight: 600 }}>Activos hoy</p>
-                            <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>843</h3>
-                        </div>
-                        <div className="stat-card">
-                            <div className="stat-header">
                                 <div className="logo-icon" style={{ background: 'rgba(245, 158, 11, 0.1)' }}>
                                     <i className="bi bi-shield-lock" style={{ color: '#f59e0b' }}></i>
                                 </div>
@@ -104,6 +97,16 @@ const AdminUserPage = () => {
                             <p style={{ fontSize: '0.8rem', color: 'var(--slate-500)', fontWeight: 600 }}>Administradores</p>
                             <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{totalAdmins}</h3>
                         </div>
+                        <div className="stat-card">
+                            <div className="stat-header">
+                                <div className="logo-icon" style={{ background: 'rgba(245, 158, 11, 0.1)' }}>
+                                    <i className="bi bi-gender-ambiguous" style={{ color: '#f59e0b' }}></i>
+                                </div>
+                                <span className="status-chip status-inactive">Distribución</span>
+                            </div>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--slate-500)', fontWeight: 600 }}>Mujeres / Hombres</p>
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{totalMujeres} / {totalHombres}</h3>
+                        </div>
                     </div>
 
                     {/* Table */}
@@ -111,10 +114,13 @@ const AdminUserPage = () => {
                         <table className="custom-table">
                             <thead>
                                 <tr>
-                                    <th>Nombre</th>
-                                    <th>Email</th>
+                                    <th>Nombres</th>
+                                    <th>Usuario</th>
+                                    <th>Correo</th>
                                     <th>Rol</th>
-                                    <th>Estado</th>
+                                    <th>Documento</th>
+                                    <th>Género</th>
+                                    <th>Fecha Reg.</th>
                                     <th style={{ textAlign: 'right' }}>Acciones</th>
                                 </tr>
                             </thead>
@@ -124,26 +130,30 @@ const AdminUserPage = () => {
                                         <td>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                                 <img 
-                                                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`} 
+                                                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.nombres || 'User')}&background=random`} 
                                                     className="user-avatar" 
-                                                    alt={user.name} 
+                                                    alt={user.nombres} 
                                                     style={{ width: '32px', height: '32px' }}
                                                 />
-                                                <span style={{ fontWeight: 600 }}>{user.name}</span>
+                                                <span style={{ fontWeight: 600 }}>{user.nombres}</span>
                                             </div>
                                         </td>
-                                        <td style={{ color: 'var(--slate-500)' }}>{user.email}</td>
                                         <td>
-                                            <span className={`status-chip ${user.role === 'Admin' ? 'status-active' : 'status-inactive'}`}>
-                                                {user.role}
+                                            <span className="status-chip status-active" style={{ background: 'rgba(168, 85, 247, 0.1)', color: '#c084fc' }}>
+                                                @{user.username}
+                                            </span>
+                                        </td>
+                                        <td style={{ color: 'var(--slate-500)' }}>{user.correo}</td>
+                                        <td>
+                                            <span className={`status-chip ${user.rol === 'Admin' ? 'status-active' : 'status-inactive'}`}>
+                                                {user.rol || 'Usuario'}
                                             </span>
                                         </td>
                                         <td>
-                                            <span className={`status-chip ${user.status === 'Active' ? 'status-active' : 'status-inactive'}`}>
-                                                <i className="bi bi-circle-fill" style={{ fontSize: '0.4rem', marginRight: '0.4rem' }}></i>
-                                                {user.status}
-                                            </span>
+                                            <span style={{ fontSize: '0.85rem' }}>{user.tipodoc} {user.documento}</span>
                                         </td>
+                                        <td>{user.genero}</td>
+                                        <td>{user.fechaRegistro}</td>
                                         <td style={{ textAlign: 'right' }}>
                                             <button className="action-btn" onClick={() => handleEditUser(user)} title="Editar">
                                                 <i className="bi bi-pencil-square"></i>

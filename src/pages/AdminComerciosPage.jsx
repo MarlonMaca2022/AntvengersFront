@@ -14,14 +14,24 @@ const AdminComerciosPage = () => {
     useEffect(() => {
         if (!localStorage.getItem('ant_comercios')) {
             const initialComercios = [
-                { id: Date.now(), nombre: 'Tienda Ara', nit: '800.234.112-5', ubicacion: 'Bogotá, D.C.', categoria: 'Supermercado' },
-                { id: Date.now() + 1, nombre: 'D1', nit: '900.556.788-2', ubicacion: 'Medellín, ANT', categoria: 'Descuento' },
-                { id: Date.now() + 2, nombre: 'Farmatodo', nit: '830.111.455-9', ubicacion: 'Cali, VAL', categoria: 'Salud' },
-                { id: Date.now() + 3, nombre: 'Homecenter', nit: '860.003.190-2', ubicacion: 'Barranquilla, ATL', categoria: 'Hogar' }
+                { id: Date.now(), nombre: 'Tienda Ara', nit: '800.234.112-5', ciudad: 'Bogotá, D.C.', contacto: '300 111 2233', tipoEmpresa: 'Supermercado', numeroEmpleados: 50, sector: 'Retail', representanteLegal: 'Juan Pérez', frecuenciadevisita: 7 },
+                { id: Date.now() + 1, nombre: 'D1', nit: '900.556.788-2', ciudad: 'Medellín, ANT', contacto: '310 444 5566', tipoEmpresa: 'Descuento', numeroEmpleados: 30, sector: 'Retail', representanteLegal: 'María Gómez', frecuenciadevisita: 15 },
+                { id: Date.now() + 2, nombre: 'Farmatodo', nit: '830.111.455-9', ciudad: 'Cali, VAL', contacto: '320 777 8899', tipoEmpresa: 'Salud', numeroEmpleados: 20, sector: 'Farmacéutico', representanteLegal: 'Carlos Ruiz', frecuenciadevisita: 30 },
+                { id: Date.now() + 3, nombre: 'Homecenter', nit: '860.003.190-2', ciudad: 'Barranquilla, ATL', contacto: '315 999 0011', tipoEmpresa: 'Hogar', numeroEmpleados: 200, sector: 'Construcción', representanteLegal: 'Ana Martínez', frecuenciadevisita: 60 }
             ];
             localStorage.setItem('ant_comercios', JSON.stringify(initialComercios));
         }
-        const storedComercios = JSON.parse(localStorage.getItem('ant_comercios') || '[]');
+        let storedComercios = JSON.parse(localStorage.getItem('ant_comercios') || '[]');
+        storedComercios = storedComercios.map(c => ({
+            ...c,
+            ciudad: c.ciudad || c.ubicacion,
+            tipoEmpresa: c.tipoEmpresa || c.categoria,
+            contacto: c.contacto || 'Sin contacto',
+            numeroEmpleados: c.numeroEmpleados || 1,
+            sector: c.sector || 'Comercio',
+            representanteLegal: c.representanteLegal || 'Sin representante',
+            frecuenciadevisita: c.frecuenciadevisita || 30
+        }));
         setComercios(storedComercios);
     }, []);
 
@@ -57,26 +67,26 @@ const AdminComerciosPage = () => {
     const filteredComercios = useMemo(() => {
         return comercios.filter(comercio => {
             const matchesSearch = comercio.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                  comercio.ubicacion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                  (comercio.ciudad || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                                   comercio.nit.toLowerCase().includes(searchTerm.toLowerCase());
             
-            const matchesFilter = currentFilter === 'Todos' || comercio.ubicacion.includes(currentFilter);
+            const matchesFilter = currentFilter === 'Todos' || (comercio.ciudad || '').includes(currentFilter);
 
             return matchesSearch && matchesFilter;
         });
     }, [comercios, searchTerm, currentFilter]);
 
-    const getCategoryStyles = (category) => {
-        switch(category) {
+    const getCategoryStyles = (tipoEmpresa) => {
+        switch(tipoEmpresa) {
             case 'Supermercado': return { icon: 'bi-cart', badge: 'cat-supermercado', bg: 'icon-supermercado' };
             case 'Descuento': return { icon: 'bi-tag', badge: 'cat-descuento', bg: 'icon-descuento' };
             case 'Salud': return { icon: 'bi-heart-pulse', badge: 'cat-salud', bg: 'icon-salud' };
             case 'Hogar': return { icon: 'bi-house-heart', badge: 'cat-hogar', bg: 'icon-hogar' };
-            default: return { icon: 'bi-shop', badge: 'cat-otro', bg: 'icon-otro' };
+            default: return { icon: 'bi-building', badge: 'cat-otro', bg: 'icon-otro' };
         }
     };
 
-    const uniqueCitiesCount = new Set(comercios.map(c => c.ubicacion)).size;
+    const uniqueCitiesCount = new Set(comercios.map(c => c.ciudad)).size;
 
     return (
         <div className="dashboard-layout">
@@ -159,15 +169,16 @@ const AdminComerciosPage = () => {
                         <table className="custom-table" style={{ width: '100%' }}>
                             <thead>
                                 <tr>
-                                    <th style={{ backgroundColor: 'rgba(var(--slate-800), 0.5)' }}>Nombre</th>
-                                    <th style={{ backgroundColor: 'rgba(var(--slate-800), 0.5)' }}>Ubicación/Ciudad</th>
-                                    <th style={{ backgroundColor: 'rgba(var(--slate-800), 0.5)' }}>Categoría Frecuente</th>
+                                    <th style={{ backgroundColor: 'rgba(var(--slate-800), 0.5)' }}>Comercio</th>
+                                    <th style={{ backgroundColor: 'rgba(var(--slate-800), 0.5)' }}>Ciudad y Contacto</th>
+                                    <th style={{ backgroundColor: 'rgba(var(--slate-800), 0.5)' }}>Tipo de Empresa</th>
+                                    <th style={{ backgroundColor: 'rgba(var(--slate-800), 0.5)' }}>Visitas / Empleados</th>
                                     <th style={{ textAlign: 'right', backgroundColor: 'rgba(var(--slate-800), 0.5)' }}>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredComercios.map(comercio => {
-                                    const styles = getCategoryStyles(comercio.categoria);
+                                    const styles = getCategoryStyles(comercio.tipoEmpresa);
                                     return (
                                         <tr key={comercio.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                                             <td>
@@ -182,13 +193,22 @@ const AdminComerciosPage = () => {
                                                 </div>
                                             </td>
                                             <td>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--slate-500)' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--slate-500)', marginBottom: '0.25rem' }}>
                                                     <i className="bi bi-geo-alt"></i>
-                                                    <span>{comercio.ubicacion}</span>
+                                                    <span style={{ fontWeight: 500 }}>{comercio.ciudad}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--slate-400)', fontSize: '0.75rem' }}>
+                                                    <i className="bi bi-telephone"></i>
+                                                    <span>{comercio.contacto}</span>
                                                 </div>
                                             </td>
                                             <td>
-                                                <span className={`category-badge ${styles.badge}`}>{comercio.categoria}</span>
+                                                <span className={`category-badge ${styles.badge}`}>{comercio.tipoEmpresa}</span>
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--slate-400)', marginTop: '0.25rem' }}>Sector: {comercio.sector}</div>
+                                            </td>
+                                            <td>
+                                                <div style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--slate-300)' }}>Cada {comercio.frecuenciadevisita} días</div>
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--slate-400)' }}>{comercio.numeroEmpleados} empleados</div>
                                             </td>
                                             <td style={{ textAlign: 'right' }}>
                                                 <button className="action-btn" onClick={() => handleEditComercio(comercio)} title="Editar">
