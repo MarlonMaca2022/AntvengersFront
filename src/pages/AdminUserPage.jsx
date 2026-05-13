@@ -9,31 +9,45 @@ const AdminUserPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [userToEdit, setUserToEdit] = useState(null);
 
-    useEffect(() => {
-        const storedUsers = JSON.parse(localStorage.getItem('ant_users') || '[]');
-        setUsers(storedUsers);
-    }, []);
-
-    const saveToLocalStorage = (newUsers) => {
-        localStorage.setItem('ant_users', JSON.stringify(newUsers));
-        setUsers(newUsers);
+    const fetchUsers = async () => {
+        try {
+            const response = await fetch('http://localhost:8080/antvengersapi/v1/usuarios');
+            if (response.ok) {
+                const data = await response.json();
+                setUsers(data);
+            } else {
+                console.error('Error fetching users:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        }
     };
 
-    const handleSaveUser = (userData) => {
-        let updatedUsers;
-        if (userToEdit) {
-            updatedUsers = users.map(u => u.id === userData.id ? userData : u);
-        } else {
-            updatedUsers = [...users, userData];
-        }
-        saveToLocalStorage(updatedUsers);
+    useEffect(() => {
+        fetchUsers();
+    }, []);
+
+    const handleSaveUser = () => {
+        fetchUsers();
         setUserToEdit(null);
     };
 
-    const handleDeleteUser = (id) => {
+    const handleDeleteUser = async (id) => {
         if (window.confirm('¿Estás seguro de eliminar este usuario?')) {
-            const updatedUsers = users.filter(u => u.id !== id);
-            saveToLocalStorage(updatedUsers);
+            try {
+                const response = await fetch(`http://localhost:8080/antvengersapi/v1/usuarios/${id}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    fetchUsers();
+                } else {
+                    console.error('Error deleting user:', response.statusText);
+                    alert('Error al eliminar el usuario');
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                alert('Error de conexión al eliminar el usuario');
+            }
         }
     };
 
@@ -50,7 +64,7 @@ const AdminUserPage = () => {
 
     const totalHombres = users.filter(u => u.genero === 'Masculino').length;
     const totalMujeres = users.filter(u => u.genero === 'Femenino').length;
-    const totalAdmins = users.filter(u => u.rol === 'Admin').length;
+    const totalAdmins = users.filter(u => u.rol === 'admin' || u.rol === 'Admin').length;
 
     return (
         <div className="dashboard-layout">
@@ -145,8 +159,8 @@ const AdminUserPage = () => {
                                         </td>
                                         <td style={{ color: 'var(--slate-500)' }}>{user.correo}</td>
                                         <td>
-                                            <span className={`status-chip ${user.rol === 'Admin' ? 'status-active' : 'status-inactive'}`}>
-                                                {user.rol || 'Usuario'}
+                                            <span className={`status-chip ${(user.rol === 'Admin' || user.rol === 'admin') ? 'status-active' : 'status-inactive'}`}>
+                                                {user.rol || 'user'}
                                             </span>
                                         </td>
                                         <td>

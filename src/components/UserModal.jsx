@@ -2,57 +2,88 @@ import React, { useState, useEffect } from 'react';
 
 const UserModal = ({ isOpen, onClose, onSave, userToEdit }) => {
     const [nombres, setNombres] = useState('');
-    const [tipodoc, setTipodoc] = useState('CC');
+    const [tipodoc, setTipodoc] = useState('Cedula');
     const [documento, setDocumento] = useState('');
     const [edad, setEdad] = useState('');
     const [genero, setGenero] = useState('Masculino');
     const [correo, setCorreo] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [rol, setRol] = useState('Usuario');
+    const [rol, setRol] = useState('user');
 
     useEffect(() => {
         if (userToEdit) {
             setNombres(userToEdit.nombres || '');
-            setTipodoc(userToEdit.tipodoc || 'CC');
+            setTipodoc(userToEdit.tipodoc || 'Cedula');
             setDocumento(userToEdit.documento || '');
             setEdad(userToEdit.edad || '');
             setGenero(userToEdit.genero || 'Masculino');
             setCorreo(userToEdit.correo || '');
             setUsername(userToEdit.username || '');
             setPassword(userToEdit.password || '');
-            setRol(userToEdit.rol || 'Usuario');
+            setRol(userToEdit.rol || 'user');
         } else {
             setNombres('');
-            setTipodoc('CC');
+            setTipodoc('Cedula');
             setDocumento('');
             setEdad('');
             setGenero('Masculino');
             setCorreo('');
             setUsername('');
             setPassword('');
-            setRol('Usuario');
+            setRol('user');
         }
     }, [userToEdit, isOpen]);
 
     if (!isOpen) return null;
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onSave({ 
-            id: userToEdit ? userToEdit.id : Date.now(), 
+        
+        const userData = {
             nombres,
             tipodoc,
             documento,
-            edad: parseInt(edad, 10),
+            edad: parseInt(edad, 10) || 0,
             genero,
             correo,
             username,
             password,
             rol,
             fechaRegistro: userToEdit && userToEdit.fechaRegistro ? userToEdit.fechaRegistro : new Date().toISOString().split('T')[0]
-        });
-        onClose();
+        };
+
+        if (userToEdit) {
+            userData.id = userToEdit.id;
+        }
+
+        try {
+            const url = userToEdit 
+                ? `http://localhost:8080/antvengersapi/v1/usuarios/${userToEdit.id}`
+                : 'http://localhost:8080/antvengersapi/v1/usuarios';
+                
+            const method = userToEdit ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            });
+
+            if (response.ok) {
+                onSave(); 
+                onClose();
+            } else {
+                const errorData = await response.text();
+                console.error('Error saving user:', response.status, errorData);
+                alert(`Error al guardar el usuario en la base de datos (Error 400). Detalles en consola.\n\nMensaje: ${errorData}`);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error de conexión al guardar el usuario');
+        }
     };
 
     return (
@@ -96,8 +127,8 @@ const UserModal = ({ isOpen, onClose, onSave, userToEdit }) => {
                                     value={tipodoc}
                                     onChange={(e) => setTipodoc(e.target.value)}
                                 >
-                                    <option value="CC">CC</option>
-                                    <option value="pasaporte">Pasaporte</option>
+                                    <option value="Cedula">CC</option>
+                                    <option value="Pasaporte">Pasaporte</option>
                                     <option value="TI">TI</option>
                                     <option value="CE">CE</option>
                                 </select>
@@ -205,8 +236,8 @@ const UserModal = ({ isOpen, onClose, onSave, userToEdit }) => {
                                     value={rol}
                                     onChange={(e) => setRol(e.target.value)}
                                 >
-                                    <option value="Usuario">Usuario</option>
-                                    <option value="Admin">Administrador</option>
+                                    <option value="user">Usuario</option>
+                                    <option value="admin">Administrador</option>
                                 </select>
                             </div>
                         </div>
