@@ -31,11 +31,11 @@ const CategoriaModal = ({ isOpen, onClose, onSave, categoriaToEdit }) => {
 
     if (!isOpen) return null;
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        
         const currentDate = new Date().toISOString().split('T')[0];
-        onSave({
-            id: categoriaToEdit ? categoriaToEdit.id : Date.now(),
+        const payload = {
             nombre,
             referencia,
             descripcion,
@@ -45,7 +45,38 @@ const CategoriaModal = ({ isOpen, onClose, onSave, categoriaToEdit }) => {
             icono,
             fechaCreacion: categoriaToEdit && categoriaToEdit.fechaCreacion ? categoriaToEdit.fechaCreacion : currentDate,
             fechaActualizacion: currentDate
-        });
+        };
+
+        if (categoriaToEdit) {
+            payload.id = categoriaToEdit.id;
+        }
+
+        try {
+            const url = categoriaToEdit
+                ? `http://localhost:8080/antvengersapi/v1/categorias/${categoriaToEdit.id}`
+                : 'http://localhost:8080/antvengersapi/v1/categorias';
+                
+            const method = categoriaToEdit ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                onSave(nombre);
+            } else {
+                const errorText = await response.text();
+                console.error('Error al guardar:', errorText);
+                alert(`Error al guardar categoría. (Status ${response.status})`);
+            }
+        } catch (error) {
+            console.error('Save error:', error);
+            alert('Error de conexión al guardar la categoría.');
+        }
     };
 
     return (

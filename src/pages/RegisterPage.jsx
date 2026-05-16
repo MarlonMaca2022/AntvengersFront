@@ -11,7 +11,7 @@ const RegisterPage = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (password !== confirmPassword) {
@@ -21,24 +21,43 @@ const RegisterPage = () => {
 
         setLoading(true);
 
-        // Mock Register Logic based on original JS
-        setTimeout(() => {
+        try {
+            // Creamos el objeto usuario adaptado a lo que espera la API
             const newUser = {
-                id: Date.now(),
-                name: fullname,
-                email: email,
-                role: 'Viewer',
-                status: 'Active'
+                nombres: fullname,
+                correo: email,
+                password: password,
+                rol: 'user', 
+                tipodoc: 'Cedula',
+                documento: 'No asignado', // Valor por defecto
+                edad: 18, // Valor por defecto
+                genero: 'Masculino', // Valor por defecto
+                username: email.split('@')[0], // Generamos un username a partir del email
+                fechaRegistro: new Date().toISOString().split('T')[0]
             };
 
-            const users = JSON.parse(localStorage.getItem('ant_users') || '[]');
-            users.push(newUser);
-            localStorage.setItem('ant_users', JSON.stringify(users));
+            const response = await fetch('http://localhost:8080/antvengersapi/v1/usuarios', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newUser)
+            });
 
-            alert('¡Cuenta creada con éxito!');
+            if (response.ok) {
+                alert('¡Cuenta creada con éxito! Ahora puedes iniciar sesión.');
+                navigate('/login');
+            } else {
+                const errorText = await response.text();
+                console.error('Error del servidor:', errorText);
+                alert(`Error al registrar usuario en el servidor. (Status ${response.status})`);
+            }
+        } catch (error) {
+            console.error('Registration error:', error);
+            alert('Error de conexión con el servidor.');
+        } finally {
             setLoading(false);
-            navigate('/');
-        }, 1200);
+        }
     };
 
     return (

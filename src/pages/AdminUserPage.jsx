@@ -11,7 +11,9 @@ const AdminUserPage = () => {
 
     const fetchUsers = async () => {
         try {
-            const response = await fetch('http://localhost:8080/antvengersapi/v1/usuarios');
+            const response = await fetch('http://localhost:8080/antvengersapi/v1/usuarios', {
+                cache: 'no-store'
+            });
             if (response.ok) {
                 const data = await response.json();
                 setUsers(data);

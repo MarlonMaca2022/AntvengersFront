@@ -9,35 +9,46 @@ const LoginPage = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
-        // Look up the user in localStorage
-        const users = JSON.parse(localStorage.getItem('ant_users') || '[]');
-        const foundUser = users.find(u => u.email === email);
+        try {
+            const response = await fetch('http://localhost:8080/antvengersapi/v1/usuarios', {
+                cache: 'no-store'
+            });
+            
+            if (response.ok) {
+                const users = await response.json();
+                // Validar contra correo y contraseña
+                const foundUser = users.find(u => u.correo === email && u.password === password);
 
-        setTimeout(() => {
-            if (foundUser) {
-                localStorage.setItem('ant_session', JSON.stringify({ name: foundUser.name, email: foundUser.email, role: foundUser.role }));
-                
-                if (foundUser.role === 'Admin') {
-                    alert('¡Acceso de Administrador!');
+                if (foundUser) {
+                    localStorage.setItem('ant_session', JSON.stringify({ 
+                        name: foundUser.nombres, 
+                        email: foundUser.correo, 
+                        role: foundUser.rol,
+                        id: foundUser.id
+                    }));
+                    
+                    if (foundUser.rol === 'Admin' || foundUser.rol === 'admin') {
+                        alert('¡Acceso de Administrador!');
+                    } else {
+                        alert('¡Bienvenido de nuevo!');
+                    }
+                    navigate('/dashboard');
                 } else {
-                    alert('¡Bienvenido de nuevo!');
+                    alert('Credenciales incorrectas o usuario no encontrado.');
                 }
-                navigate('/dashboard');
-            } else if (email === 'alex@antvengers.com') {
-                localStorage.setItem('ant_session', JSON.stringify({ name: 'Alex Rivera', email, role: 'Admin' }));
-                alert('¡Acceso de Administrador!');
-                navigate('/dashboard');
             } else {
-                localStorage.setItem('ant_session', JSON.stringify({ name: 'Heroe', email, role: 'User' }));
-                alert('¡Bienvenido de nuevo!');
-                navigate('/dashboard');
+                alert('Error al conectar con la API de usuarios.');
             }
+        } catch (error) {
+            console.error('Login error:', error);
+            alert('Error de conexión con el servidor.');
+        } finally {
             setLoading(false);
-        }, 1200);
+        }
     };
 
     return (

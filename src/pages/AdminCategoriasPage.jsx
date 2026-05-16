@@ -11,48 +11,51 @@ const AdminCategoriasPage = () => {
     const [categoriaToEdit, setCategoriaToEdit] = useState(null);
     const [recentActivity, setRecentActivity] = useState('Ninguna');
 
-    useEffect(() => {
-        if (!localStorage.getItem('ant_categorias')) {
-            const initialCategorias = [
-                { id: Date.now(), nombre: 'Alimentos', referencia: 'CAT-001', descripcion: 'Insumos básicos y productos perecederos de la canasta familiar colombiana.', estado: 'Activo', prioridad: 'Alta', color: 'Verde', icono: 'bi-cup-hot', fechaCreacion: '2023-01-01', fechaActualizacion: '2023-01-01' },
-                { id: Date.now() + 1, nombre: 'Tecnología', referencia: 'CAT-002', descripcion: 'Dispositivos electrónicos, computadores, smartphones y accesorios de última generación.', estado: 'Activo', prioridad: 'Alta', color: 'Azul', icono: 'bi-pc-display', fechaCreacion: '2023-01-01', fechaActualizacion: '2023-01-01' },
-                { id: Date.now() + 2, nombre: 'Hogar', referencia: 'CAT-003', descripcion: 'Muebles, decoración y herramientas para la mejora del espacio doméstico.', estado: 'Activo', prioridad: 'Media', color: 'Naranja', icono: 'bi-house', fechaCreacion: '2023-01-01', fechaActualizacion: '2023-01-01' },
-                { id: Date.now() + 3, nombre: 'Salud', referencia: 'CAT-004', descripcion: 'Medicamentos, suministros médicos y productos de cuidado personal especializado.', estado: 'Activo', prioridad: 'Alta', color: 'Rojo', icono: 'bi-heart-pulse', fechaCreacion: '2023-01-01', fechaActualizacion: '2023-01-01' }
-            ];
-            localStorage.setItem('ant_categorias', JSON.stringify(initialCategorias));
+    const fetchCategorias = async () => {
+        try {
+            const response = await fetch('http://localhost:8080/antvengersapi/v1/categorias', {
+                cache: 'no-store'
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setCategorias(data);
+            } else {
+                console.error('Error fetching categorias');
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
         }
-        let loadedCategorias = JSON.parse(localStorage.getItem('ant_categorias') || '[]');
-        loadedCategorias = loadedCategorias.map(c => ({
-            ...c,
-            referencia: c.referencia || c.ref,
-            estado: c.estado || 'Activo',
-            prioridad: c.prioridad || 'Media'
-        }));
-        setCategorias(loadedCategorias);
-    }, []);
-
-    const saveToLocalStorage = (newCategorias) => {
-        localStorage.setItem('ant_categorias', JSON.stringify(newCategorias));
-        setCategorias(newCategorias);
     };
 
-    const handleSaveCategoria = (catData) => {
-        let updatedCategorias;
-        if (categoriaToEdit) {
-            updatedCategorias = categorias.map(c => c.id === catData.id ? catData : c);
-        } else {
-            updatedCategorias = [...categorias, catData];
+    useEffect(() => {
+        fetchCategorias();
+    }, []);
+
+    const handleSaveCategoria = (nombreCat) => {
+        fetchCategorias();
+        if (typeof nombreCat === 'string') {
+            setRecentActivity(nombreCat);
         }
-        saveToLocalStorage(updatedCategorias);
-        setRecentActivity(catData.nombre);
         setCategoriaToEdit(null);
         setIsModalOpen(false);
     };
 
-    const handleDeleteCategoria = (id) => {
+    const handleDeleteCategoria = async (id) => {
         if (window.confirm('¿Estás seguro de eliminar esta categoría?')) {
-            const updatedCategorias = categorias.filter(c => c.id !== id);
-            saveToLocalStorage(updatedCategorias);
+            try {
+                const response = await fetch(`http://localhost:8080/antvengersapi/v1/categorias/${id}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    fetchCategorias();
+                    setRecentActivity('Eliminación');
+                } else {
+                    alert('Error al eliminar la categoría en el servidor.');
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                alert('Error de conexión al eliminar.');
+            }
         }
     };
 
